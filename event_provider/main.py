@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 
+from event_provider.database import init_db
 
-app = FastAPI(
-    title="Ale.dev Test Challenge",
-    version="0.0.1"
-)
+from . import models
 
 
-@app.get("/")
-def main_function():
-    """
-    Home Page response
-    """
-    return {"Message": "Hello World"}
+def init_app():
+    app = FastAPI(title="Ale.dev Test Challenge", version="0.0.1")
+    init_db()
 
+
+app = init_app()
