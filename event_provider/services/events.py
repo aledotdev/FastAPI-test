@@ -1,77 +1,83 @@
+from typing import TYPE_CHECKING
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 
-
-def get_provider(provider_id: int, db: Session) -> models.Provider | None:
-    query = db.query(models.Provider)
-    query = query.filter(models.Provider.id == provider_id)
-    return query.first()
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio.session import AsyncSession
 
 
-def provider_create(provider_data: schemas.ProviderCreate, db: Session) -> models.Provider:
+async def get_provider(provider_id: int, db_session: "AsyncSession") -> models.Provider | None:
+    return await db_session.get(models.Provider, provider_id)
+
+
+async def provider_create(provider_data: schemas.ProviderCreate, db_session: "AsyncSession") -> models.Provider:
     db_provider = models.Provider(name=provider_data.name, events_api_url=provider_data.events_api_url)
-    db.add(db_provider)
-    db.commit()
-    db.refresh(db_provider)
+    db_session.add(db_provider)
     return db_provider
 
 
-def provider_update(provider: models.Provider, provider_data: schemas.ProviderUpdate, db: Session) -> models.Provider:
+async def provider_update(
+    provider: models.Provider, provider_data: schemas.ProviderUpdate, db_session: "AsyncSession"
+) -> models.Provider:
     provider.name = provider_data.name
     provider.events_api_url = provider_data.events_api_url
-    db.commit()
+    db_session.add(provider)
     return provider
 
 
-def get_provider_base_event(
-    provider: models.Provider, base_event_id: int, db: Session
+async def get_provider_base_event(
+    provider: models.Provider, base_event_id: int, db_session: "AsyncSession"
 ) -> models.ProviderBaseEvent | None:
-    query = db.query(models.ProviderBaseEvent)
-    query = query.filter(models.ProviderBaseEvent.provider_id == provider.id)
-    query = query.filter(models.ProviderBaseEvent.base_event_id == base_event_id)
-    return query.first()
+    query = (
+        select(models.ProviderBaseEvent)
+        .where(models.ProviderBaseEvent.provider_id == provider.id)
+        .where(models.ProviderBaseEvent.base_event_id == base_event_id)
+    )
+    return await db_session.scalar(query)
 
 
-def provider_base_event_create(
-    provider: models.Provider, provider_base_event_data: schemas.ProviderBaseEventCreate, db: Session
+async def provider_base_event_create(
+    provider: models.Provider, provider_base_event_data: schemas.ProviderBaseEventCreate, db_session: "AsyncSession"
 ) -> models.ProviderBaseEvent:
     db_provider_base_event = models.ProviderBaseEvent(
         provider=provider,
         base_event_id=provider_base_event_data.base_event_id,
-        sell_mode=provider_base_event_data.sell_mode,
+        sell_mode=getattr(models.SellModeEnum, provider_base_event_data.sell_mode),
         title=provider_base_event_data.title,
         organizer_company_id=provider_base_event_data.organizer_company_id,
     )
-    db.add(db_provider_base_event)
-    db.commit()
-    db.refresh(db_provider_base_event)
+    db_session.add(db_provider_base_event)
     return db_provider_base_event
 
 
-def provider_base_event_update(
+async def provider_base_event_update(
     provider_base_event: models.ProviderBaseEvent,
     provider_base_event_data: schemas.ProviderBaseEventUpdate,
-    db: Session,
+    db_session: "AsyncSession",
 ):
     provider_base_event.sell_mode = provider_base_event_data.sell_mode
     provider_base_event.title = provider_base_event_data.title
-    db.commit()
+    db_session.add(provider_base_event)
     return provider_base_event
 
 
-def get_provider_event(provider: models.Provider, event_id: int, db: Session):
-    query = db.query(models.ProviderEvent)
-    query = query.filter(models.ProviderEvent.provider_id == provider.id)
-    query = query.filter(models.ProviderEvent.event_id == event_id)
-    return query.first()
+async def get_provider_event(provider: models.Provider, event_id: int, db_session: "AsyncSession"):
+    query = (
+        select(models.ProviderEvent)
+        .filter(models.ProviderEvent.provider_id == provider.id)
+        .filter(models.ProviderEvent.event_id == event_id)
+    )
+    return await db_session.scalar(query)
 
 
-def provider_event_create(
+async def provider_event_create(
     provider: models.Provider,
     provider_base_event: models.ProviderBaseEvent,
     provider_event_data: schemas.ProviderEventCreate,
-    db: Session,
+    db_session: "AsyncSession",
 ) -> models.ProviderEvent:
     db_provider_event = models.ProviderEvent(
         provider=provider,
@@ -85,16 +91,14 @@ def provider_event_create(
         sell_to=provider_event_data.sell_to,
         sold_out=provider_event_data.sold_out,
     )
-    db.add(db_provider_event)
-    db.commit()
-    db.refresh(db_provider_event)
+    db_session.add(db_provider_event)
     return db_provider_event
 
 
-def provider_event_update(
+async def provider_event_update(
     provider_event: models.ProviderEvent,
     provider_event_data: schemas.ProviderEventUpdate,
-    db: Session,
+    db_session: "AsyncSession",
 ):
     provider_event.event_start_date = provider_event_data.event_start_date
     provider_event.event_start_time = provider_event_data.event_start_date.time()
@@ -103,15 +107,14 @@ def provider_event_update(
     provider_event.sell_from = provider_event_data.sell_from
     provider_event.sell_to = provider_event_data.sell_to
     provider_event.sold_out = provider_event_data.sold_out
-
-    db.commit()
+    db_session.add(provider_event)
     return provider_event
 
 
-def provider_event_zone_add(
+async def provider_event_zone_add(
     provider_event: models.ProviderBaseEvent,
     provider_event_data: schemas.ProviderEventZoneAdd,
-    db: Session,
+    db_session: "AsyncSession",
 ) -> models.ProviderEventZone:
     db_provider_event_zone = models.ProviderEventZone(
         provider=provider_event.provider,
@@ -122,7 +125,5 @@ def provider_event_zone_add(
         name=provider_event_data.name,
         numbered=provider_event_data.numbered,
     )
-    db.add(db_provider_event_zone)
-    db.commit()
-    db.refresh(db_provider_event_zone)
+    db_session.add(db_provider_event_zone)
     return db_provider_event_zone
