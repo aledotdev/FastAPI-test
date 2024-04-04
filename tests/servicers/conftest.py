@@ -34,7 +34,9 @@ def fixture_db():
 
 @pytest.fixture(name="test_provider")
 def fixture_test_provider(db):
-    return events_services.provider_create(schemas.ProviderCreate(name="Test Provider"), db)
+    return events_services.provider_create(
+        schemas.ProviderCreate(name="Test Provider", events_api_url="https://example.com"), db
+    )
 
 
 @pytest.fixture(name="test_provider_base_event")

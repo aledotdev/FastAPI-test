@@ -10,7 +10,7 @@ def get_provider(provider_id: int, db: Session) -> models.Provider | None:
 
 
 def provider_create(provider_data: schemas.ProviderCreate, db: Session) -> models.Provider:
-    db_provider = models.Provider(name=provider_data.name)
+    db_provider = models.Provider(name=provider_data.name, events_api_url=provider_data.events_api_url)
     db.add(db_provider)
     db.commit()
     db.refresh(db_provider)
@@ -19,6 +19,7 @@ def provider_create(provider_data: schemas.ProviderCreate, db: Session) -> model
 
 def provider_update(provider: models.Provider, provider_data: schemas.ProviderUpdate, db: Session) -> models.Provider:
     provider.name = provider_data.name
+    provider.events_api_url = provider_data.events_api_url
     db.commit()
     return provider
 

@@ -1,4 +1,4 @@
-  # pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods
 
 import enum
 from datetime import time
@@ -14,6 +14,7 @@ class Provider(DBBase):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(255))
+    events_api_url: Mapped[str]
 
 
 class SellModeEnum(enum.Enum):

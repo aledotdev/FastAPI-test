@@ -1,13 +1,16 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
 
 class ProviderCreate(BaseModel):
     name: str
+    events_api_url: str
 
 
 class ProviderUpdate(BaseModel):
     name: str
+    events_api_url: str
 
 
 class ProviderBaseEventCreate(BaseModel):
