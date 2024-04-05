@@ -12,10 +12,10 @@ from event_provider.services import sync_provider_events
 async def test_provider_events_sync_fetch(
     fetch_provider_event_data_mock, test_provider, provider_events_xml_example, async_session
 ):
-    fetch_provider_event_data_mock.return_value = provider_events_xml_example
-    await sync_provider_events.sync_provider_events(test_provider, async_session)
-
     async with async_session() as session:
+        fetch_provider_event_data_mock.return_value = provider_events_xml_example
+        await sync_provider_events.sync_provider_events(test_provider, session)
+
         base_event = await events_services.get_provider_base_event(test_provider, 291, session)
         event = await events_services.get_provider_event(test_provider, 291, session)
         zone = await events_services.get_provider_event_zone(test_provider, event, 40, session)

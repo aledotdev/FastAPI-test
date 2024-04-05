@@ -10,17 +10,15 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio.session import AsyncSession
 
 
-async def sync_provider_events(provider: models.Provider, async_session):
+async def sync_provider_events(provider: models.Provider, session: "AsyncSession"):
     raw_base_event_data = parse_provider_event_data(await fetch_provider_event_data(provider.events_api_url))
-
     for base_event_data in raw_base_event_data:
-        async with async_session() as session:
-            async with session.begin():
-                base_event = await _provider_base_event_create_or_update(provider, base_event_data, session)
-                for event_data in base_event_data.events:
-                    event = await _provider_event_create_or_update(provider, base_event, event_data, session)
-                    for zone_data in event_data.zones:
-                        await _provider_event_zone_create_or_update(provider, event, zone_data, session)
+        async with session.begin():
+            base_event = await _provider_base_event_create_or_update(provider, base_event_data, session)
+            for event_data in base_event_data.events:
+                event = await _provider_event_create_or_update(provider, base_event, event_data, session)
+                for zone_data in event_data.zones:
+                    await _provider_event_zone_create_or_update(provider, event, zone_data, session)
 
 
 async def _provider_base_event_create_or_update(

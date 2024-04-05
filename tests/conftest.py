@@ -1,22 +1,23 @@
 import arrow
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from event_provider import schemas
-from event_provider.database import DBBase
+from event_provider import database, schemas
 from event_provider.services import events as events_services
+from event_provider.settings import get_settigns
+
+
+@pytest.fixture(name="test_settings", scope="session")
+def fixtute_test_settings():
+    yield get_settigns(env="test")
 
 
 @pytest_asyncio.fixture(name="async_session")
-async def fixture_async_db():
-    url = "postgresql+asyncpg://event_provider:event_provider@localhost:5432/event_provider"
-    engine = create_async_engine(url)
+async def fixture_async_db(test_settings):
+    engine = database.create_async_engine(test_settings.DB_URL)
 
-    async with engine.begin() as conn:
-        await conn.run_sync(DBBase.metadata.drop_all)
-    async with engine.begin() as conn:
-        await conn.run_sync(DBBase.metadata.create_all)
+    await database.init_db(engine, dropall=True)
 
     async_session = async_sessionmaker(engine, expire_on_commit=False)
     yield async_session
