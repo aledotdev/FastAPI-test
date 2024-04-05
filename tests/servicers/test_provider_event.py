@@ -7,10 +7,10 @@ from event_provider.services import events as events_services
 
 @pytest.mark.asyncio
 async def test_create_provider_event(test_provider, test_provider_base_event, async_session):
-    start = arrow.get("2024-04-10T20:00:00+00")
-    end = arrow.get("2024-04-10T21:00:00")
     async with async_session() as session:
         async with session.begin():
+            start = arrow.get("2024-04-10T20:00:00+00")
+            end = arrow.get("2024-04-10T21:00:00+00")
             provider_event = await events_services.provider_event_create(
                 test_provider,
                 test_provider_base_event,
@@ -78,12 +78,13 @@ async def test_get_provider_event(test_provider, test_provider_event, async_sess
 
 
 @pytest.mark.asyncio
-async def test_provider_zone_add(test_provider_event, async_session):
+async def test_provider_zone_create(test_provider, test_provider_event, async_session):
     async with async_session() as session:
         async with session.begin():
-            provider_zone = await events_services.provider_event_zone_add(
+            provider_zone = await events_services.provider_event_zone_create(
+                test_provider,
                 test_provider_event,
-                schemas.ProviderEventZoneAdd(
+                schemas.ProviderEventZoneCreate(
                     zone_id=111,
                     capacity=333,
                     price=35.99,
@@ -98,3 +99,41 @@ async def test_provider_zone_add(test_provider_event, async_session):
         assert provider_zone.price == 35.99
         assert provider_zone.name == "Test Zone"
         assert provider_zone.numbered is True
+
+
+@pytest.mark.asyncio
+async def test_provider_zone_update(test_provider, test_provider_event, async_session):
+    async with async_session() as session:
+        async with session.begin():
+            provider_zone = await events_services.provider_event_zone_create(
+                test_provider,
+                test_provider_event,
+                schemas.ProviderEventZoneCreate(
+                    zone_id=111,
+                    capacity=333,
+                    price=35.99,
+                    name="Test Zone",
+                    numbered=True,
+                ),
+                session,
+            )
+
+    async with async_session() as session:
+        async with session.begin():
+            await events_services.provider_event_zone_update(
+                provider_zone,
+                schemas.ProviderEventZoneUpdate(
+                    capacity=555,
+                    price=99.98,
+                    name="Updated Zone",
+                    numbered=False,
+                ),
+                session,
+            )
+        updated_provider_event_zone = await events_services.get_provider_event_zone(
+            test_provider, test_provider_event, provider_zone.zone_id, session
+        )
+    assert updated_provider_event_zone.capacity == 555
+    assert updated_provider_event_zone.price == 99.98
+    assert updated_provider_event_zone.name == "Updated Zone"
+    assert updated_provider_event_zone.numbered is False

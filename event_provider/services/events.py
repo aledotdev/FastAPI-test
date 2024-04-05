@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 
 from .. import models, schemas
 
@@ -29,13 +29,15 @@ async def provider_update(
 
 
 async def get_provider_base_event(
-    provider: models.Provider, base_event_id: int, db_session: "AsyncSession"
+    provider: models.Provider, base_event_id: int, db_session: "AsyncSession", load_events: bool = False
 ) -> models.ProviderBaseEvent | None:
     query = (
         select(models.ProviderBaseEvent)
         .where(models.ProviderBaseEvent.provider_id == provider.id)
         .where(models.ProviderBaseEvent.base_event_id == base_event_id)
     )
+    if load_events:
+        query = query.options(joinedload(models.ProviderBaseEvent.events).subqueryload(models.ProviderEvent.zones))
     return await db_session.scalar(query)
 
 
@@ -111,19 +113,45 @@ async def provider_event_update(
     return provider_event
 
 
-async def provider_event_zone_add(
+async def provider_event_zone_create(
+    provider: models.Provider,
     provider_event: models.ProviderBaseEvent,
-    provider_event_data: schemas.ProviderEventZoneAdd,
+    provider_event_zone_data: schemas.ProviderEventZoneCreate,
     db_session: "AsyncSession",
 ) -> models.ProviderEventZone:
     db_provider_event_zone = models.ProviderEventZone(
-        provider=provider_event.provider,
+        provider=provider,
         provider_event=provider_event,
-        zone_id=provider_event_data.zone_id,
-        capacity=provider_event_data.capacity,
-        price=provider_event_data.price,
-        name=provider_event_data.name,
-        numbered=provider_event_data.numbered,
+        zone_id=provider_event_zone_data.zone_id,
+        capacity=provider_event_zone_data.capacity,
+        price=provider_event_zone_data.price,
+        name=provider_event_zone_data.name,
+        numbered=provider_event_zone_data.numbered,
     )
     db_session.add(db_provider_event_zone)
     return db_provider_event_zone
+
+
+async def provider_event_zone_update(
+    provider_event_zone: models.ProviderEventZone,
+    provider_event_zone_data: schemas.ProviderEventZoneUpdate,
+    db_session: "AsyncSession",
+) -> models.ProviderEventZone:
+    provider_event_zone.capacity = provider_event_zone_data.capacity
+    provider_event_zone.price = provider_event_zone_data.price
+    provider_event_zone.name = provider_event_zone_data.name
+    provider_event_zone.numbered = provider_event_zone_data.numbered
+    db_session.add(provider_event_zone)
+    return provider_event_zone
+
+
+async def get_provider_event_zone(
+    provider: models.Provider, event: models.ProviderEvent, zone_id: int, db_session: "AsyncSession"
+):
+    query = (
+        select(models.ProviderEventZone)
+        .filter(models.ProviderEventZone.provider_id == provider.id)
+        .filter(models.ProviderEventZone.provider_event_id == event.id)
+        .filter(models.ProviderEventZone.zone_id == zone_id)
+    )
+    return await db_session.scalar(query)

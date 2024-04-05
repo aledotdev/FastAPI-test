@@ -30,7 +30,7 @@ class ProviderBaseEvent(DBBase):
     base_event_id: Mapped[int]
     sell_mode: Mapped[str] = mapped_column(Enum(SellModeEnum))
     title: Mapped[str] = mapped_column(String(512), nullable=False)
-    organizer_company_id: Mapped[int]
+    organizer_company_id: Mapped[int | None]
 
     provider: Mapped["Provider"] = relationship("Provider")
     events: Mapped[list["ProviderEvent"]] = relationship()
