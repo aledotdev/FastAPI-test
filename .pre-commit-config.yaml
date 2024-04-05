@@ -17,24 +17,14 @@ repos:
         args: ["--maxkb=1024"]
       - id: check-json
       - id: debug-statements
-        exclude: |
-          (?x)(
-              ^archive|
-              ^src/thirdparty
-          )
       - id: detect-private-key
-        exclude: |
-          (?x)(
-              ^config/test.yml|
-              ^test/vocalo/utils/test_misc.py
-          )
       - id: requirements-txt-fixer
 
   - repo: local
     hooks:
-      - id: pylint-ignore
-        name: pylint-ignore
-        entry: pylint-ignore
+      - id: pylint
+        name: pylint
+        entry: pylint
         language: system
         types: [python]
         require_serial: true
