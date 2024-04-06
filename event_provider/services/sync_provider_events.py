@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import arrow
 
 from event_provider import models, schemas
+from event_provider.logger import logger
 from event_provider.services import events as events_services
 from event_provider.services.fetch_provider_events import fetch_provider_event_data, parse_provider_event_data
 
@@ -14,15 +15,33 @@ async def sync_provider_events(provider: models.Provider, session: "AsyncSession
     raw_base_event_data = parse_provider_event_data(await fetch_provider_event_data(provider.events_api_url))
     for base_event_data in raw_base_event_data:
         async with session.begin():
-            base_event = await _provider_base_event_create_or_update(provider, base_event_data, session)
+            try:
+                base_event = await _provider_base_event_create_or_update(provider, base_event_data, session)
+            except:  # pylint: disable=bare-except
+                msg = "Sync error for BaseEvent. Provider: %s data: %s"
+                logger.exception(msg, provider.id, base_event_data)
+                continue
+
             for event_data in base_event_data.events:
-                event = await _provider_event_create_or_update(provider, base_event, event_data, session)
+                try:
+                    event = await _provider_event_create_or_update(provider, base_event, event_data, session)
+                except:  # pylint: disable=bare-except
+                    msg = "Sync error for Event. Provider: %s BaseEvent: %s data: %s"
+                    logger.exception(msg, provider.id, base_event.id, event_data)
+                    continue
+
                 for zone_data in event_data.zones:
-                    await _provider_event_zone_create_or_update(provider, event, zone_data, session)
+                    try:
+                        await _provider_event_zone_create_or_update(provider, event, zone_data, session)
+                    except:  # pylint: disable=bare-except
+                        msg = "Sync error for EventZone. Provider: %s Event: %s data: %s"
+                        logger.exception(msg, provider.id, event.id, zone_data)
 
 
 async def _provider_base_event_create_or_update(
-    provider: models.Provider, base_event_data: schemas.FetchProviderBaseEvent, session: "AsyncSession"
+    provider: models.Provider,
+    base_event_data: schemas.FetchProviderBaseEvent,
+    session: "AsyncSession",
 ) -> models.ProviderBaseEvent:
 
     base_event = await events_services.get_provider_base_event(provider, base_event_data.base_event_id, session)
