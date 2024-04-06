@@ -58,7 +58,14 @@ class ProviderEvent(DBBase):
     provider_base_event: Mapped["ProviderBaseEvent"] = relationship(back_populates="events")
     zones: Mapped[list["ProviderEventZone"]] = relationship()
 
-    __table_args__ = (UniqueConstraint("provider_id", "event_id", name="_provider_event_id_uc"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "provider_id",
+            "provider_base_event_id",
+            "event_id",
+            name="_provider_event_id_uc",
+        ),
+    )
 
 
 class ProviderEventZone(DBBase):
@@ -76,4 +83,11 @@ class ProviderEventZone(DBBase):
     provider: Mapped["Provider"] = relationship("Provider")
     provider_event: Mapped["ProviderEvent"] = relationship(back_populates="zones")
 
-    __table_args__ = (UniqueConstraint("provider_id", "provider_event_id", "zone_id", name="_provider_event_zone_uc"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "provider_id",
+            "provider_event_id",
+            "zone_id",
+            name="_provider_event_zone_uc",
+        ),
+    )

@@ -9,7 +9,9 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio.session import AsyncSession
 
 
-async def get_all_providers(db_session: "AsyncSession") -> ScalarResult[models.Provider]:
+async def get_all_providers(
+    db_session: "AsyncSession",
+) -> ScalarResult[models.Provider]:
     return await db_session.scalars(select(models.Provider))
 
 
@@ -24,7 +26,9 @@ async def provider_create(provider_data: schemas.ProviderCreate, db_session: "As
 
 
 async def provider_update(
-    provider: models.Provider, provider_data: schemas.ProviderUpdate, db_session: "AsyncSession"
+    provider: models.Provider,
+    provider_data: schemas.ProviderUpdate,
+    db_session: "AsyncSession",
 ) -> models.Provider:
     provider.name = provider_data.name
     provider.events_api_url = provider_data.events_api_url
@@ -33,7 +37,10 @@ async def provider_update(
 
 
 async def get_provider_base_event(
-    provider: models.Provider, base_event_id: int, db_session: "AsyncSession", load_events: bool = False
+    provider: models.Provider,
+    base_event_id: int,
+    db_session: "AsyncSession",
+    load_events: bool = False,
 ) -> models.ProviderBaseEvent | None:
     query = (
         select(models.ProviderBaseEvent)
@@ -46,7 +53,9 @@ async def get_provider_base_event(
 
 
 async def provider_base_event_create(
-    provider: models.Provider, provider_base_event_data: schemas.ProviderBaseEventCreate, db_session: "AsyncSession"
+    provider: models.Provider,
+    provider_base_event_data: schemas.ProviderBaseEventCreate,
+    db_session: "AsyncSession",
 ) -> models.ProviderBaseEvent:
     db_provider_base_event = models.ProviderBaseEvent(
         provider=provider,
@@ -70,13 +79,29 @@ async def provider_base_event_update(
     return provider_base_event
 
 
-async def get_provider_event(provider: models.Provider, event_id: int, db_session: "AsyncSession"):
+async def get_provider_event(
+    provider: models.Provider,
+    provider_base_event: models.ProviderBaseEvent,
+    event_id: int,
+    db_session: "AsyncSession",
+    load_base_event: bool = False,
+):
     query = (
         select(models.ProviderEvent)
         .filter(models.ProviderEvent.provider_id == provider.id)
+        .filter(models.ProviderEvent.provider_base_event_id == provider_base_event.id)
         .filter(models.ProviderEvent.event_id == event_id)
     )
+    if load_base_event:
+        query = query.options(joinedload(models.ProviderEvent.provider_base_event))
     return await db_session.scalar(query)
+
+
+async def get_all_events(
+    db_session: "AsyncSession",
+) -> ScalarResult[models.ProviderEvent]:
+    query = select(models.ProviderEvent).options(joinedload(models.ProviderEvent.provider_base_event))
+    return await db_session.scalars(query)
 
 
 async def provider_event_create(
@@ -150,7 +175,10 @@ async def provider_event_zone_update(
 
 
 async def get_provider_event_zone(
-    provider: models.Provider, event: models.ProviderEvent, zone_id: int, db_session: "AsyncSession"
+    provider: models.Provider,
+    event: models.ProviderEvent,
+    zone_id: int,
+    db_session: "AsyncSession",
 ):
     query = (
         select(models.ProviderEventZone)

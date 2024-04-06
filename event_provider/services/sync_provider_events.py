@@ -71,7 +71,7 @@ async def _provider_event_create_or_update(
     event_data: schemas.FetchProviderEvent,
     session: "AsyncSession",
 ) -> models.ProviderEvent:
-    event = await events_services.get_provider_event(provider, event_data.event_id, session)
+    event = await events_services.get_provider_event(provider, base_event, event_data.event_id, session)
     if not event:
         event = await events_services.provider_event_create(
             provider,

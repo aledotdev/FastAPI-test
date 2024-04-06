@@ -24,11 +24,11 @@ class Settings(BaseSettings):
 CACHED_SETTINGS: Settings | None = None
 
 
-def get_settings(env: str | None = None, cached=True) -> Settings:
+def get_settings(env: str | None = None, reload=False) -> Settings:
     global CACHED_SETTINGS  # pylint: disable=global-statement
     if env is None:
         env = ENVIRONMENT
-    if not CACHED_SETTINGS or not cached:
+    if not CACHED_SETTINGS or reload:
         env_files = ["settings/envs/.env-common"]
         if env != "dev" and os.path.exists(f"settings/envs/.env-{env}"):
             env_files.append(f"settings/envs/.env-{env}")

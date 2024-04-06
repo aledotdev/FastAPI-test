@@ -17,7 +17,7 @@ async def test_provider_events_sync_fetch(
         await sync_provider_events.sync_provider_events(test_provider, session)
 
         base_event = await events_services.get_provider_base_event(test_provider, 291, session)
-        event = await events_services.get_provider_event(test_provider, 291, session)
+        event = await events_services.get_provider_event(test_provider, base_event, 291, session)
         zone = await events_services.get_provider_event_zone(test_provider, event, 40, session)
 
     assert base_event is not None

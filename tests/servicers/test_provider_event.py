@@ -25,7 +25,9 @@ async def test_create_provider_event(test_provider, test_provider_base_event, as
                 session,
             )
 
-        new_provider_event = await events_services.get_provider_event(test_provider, provider_event.event_id, session)
+        new_provider_event = await events_services.get_provider_event(
+            test_provider, test_provider_base_event, provider_event.event_id, session
+        )
         assert new_provider_event.provider_id == test_provider.id
         assert new_provider_event.provider_base_event_id == test_provider_base_event.id
         assert new_provider_event.event_id == 555
@@ -39,7 +41,7 @@ async def test_create_provider_event(test_provider, test_provider_base_event, as
 
 
 @pytest.mark.asyncio
-async def test_update_provider_event(test_provider, test_provider_event, async_session):
+async def test_update_provider_event(test_provider, test_provider_base_event, test_provider_event, async_session):
     new_start = arrow.get("2024-10-10T22:00:00+00")
     new_end = arrow.get("2024-10-10T23:00:00")
     async with async_session() as session:
@@ -57,7 +59,10 @@ async def test_update_provider_event(test_provider, test_provider_event, async_s
             )
 
         updated_provider_event = await events_services.get_provider_event(
-            test_provider, test_provider_event.event_id, session
+            test_provider,
+            test_provider_base_event,
+            test_provider_event.event_id,
+            session,
         )
 
         assert updated_provider_event.id == test_provider_event.id
@@ -69,9 +74,14 @@ async def test_update_provider_event(test_provider, test_provider_event, async_s
 
 
 @pytest.mark.asyncio
-async def test_get_provider_event(test_provider, test_provider_event, async_session):
+async def test_get_provider_event(test_provider, test_provider_base_event, test_provider_event, async_session):
     async with async_session() as session:
-        provider_event = await events_services.get_provider_event(test_provider, test_provider_event.event_id, session)
+        provider_event = await events_services.get_provider_event(
+            test_provider,
+            test_provider_base_event,
+            test_provider_event.event_id,
+            session,
+        )
 
     assert provider_event.id == test_provider_event.id
     assert provider_event.event_id == test_provider_event.event_id

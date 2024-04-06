@@ -5,12 +5,16 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from event_provider import database, schemas
 from event_provider.services import events as events_services
-from event_provider.settings import get_settigns
+from event_provider.settings import get_settings
+
+
+def pytest_configure():
+    get_settings(env="test", reload=True)
 
 
 @pytest.fixture(name="test_settings", scope="session")
 def fixtute_test_settings():
-    yield get_settigns(env="test")
+    yield get_settings(env="test")
 
 
 @pytest_asyncio.fixture(name="async_session")

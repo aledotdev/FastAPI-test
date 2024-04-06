@@ -1,6 +1,6 @@
 import logging
 
-import coloredlogs
+import coloredlogs  # type: ignore
 
 from event_provider.settings import get_settings
 
