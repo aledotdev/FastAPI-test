@@ -1,12 +1,16 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import ScalarResult, select
 from sqlalchemy.orm import joinedload
 
 from .. import models, schemas
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio.session import AsyncSession
+
+
+async def get_all_providers(db_session: "AsyncSession") -> ScalarResult[models.Provider]:
+    return await db_session.scalars(select(models.Provider))
 
 
 async def get_provider(provider_id: int, db_session: "AsyncSession") -> models.Provider | None:

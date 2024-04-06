@@ -1,9 +1,12 @@
+from typing import TypeAlias
+
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 from event_provider.settings import Settings, get_settings
 
 DBBase = declarative_base()
+DBSession: TypeAlias = async_sessionmaker[AsyncSession]
 
 
 def get_database_engine(settings: Settings) -> AsyncEngine:
@@ -12,7 +15,7 @@ def get_database_engine(settings: Settings) -> AsyncEngine:
     return settings.DB_ENGINE
 
 
-def get_db_session(settings: Settings | None = None) -> async_sessionmaker[AsyncSession]:
+def get_db_session(settings: Settings | None = None) -> DBSession:
     if not settings:
         settings = get_settings()
     engine = get_database_engine(settings)
