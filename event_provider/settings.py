@@ -3,8 +3,6 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-ENVIRONMENT = os.getenv("PROVIDER_EVENTS_ENV", "dev")
-
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file="settings/envs/.env-common", env_file_encoding="utf-8")
@@ -26,16 +24,18 @@ CACHED_SETTINGS: Settings | None = None
 
 def get_settings(env: str | None = None, reload=False) -> Settings:
     global CACHED_SETTINGS  # pylint: disable=global-statement
-    if env is None:
-        env = ENVIRONMENT
     if not CACHED_SETTINGS or reload:
+        if env is None:
+            env = os.getenv("PROVIDER_EVENTS_ENV", "dev")
         env_files = ["settings/envs/.env-common"]
         if env != "dev" and os.path.exists(f"settings/envs/.env-{env}"):
             env_files.append(f"settings/envs/.env-{env}")
+        if os.path.exists(".env-local"):
+            env_files.append(".env-local")
         CACHED_SETTINGS = Settings(_env_file=tuple(env_files))  # type: ignore
 
     return CACHED_SETTINGS
 
 
 def get_env():
-    return ENVIRONMENT
+    return get_settings().ENV
