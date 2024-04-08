@@ -38,6 +38,8 @@ async def test_provider_events_sync_fetch(
     assert event.sell_from == arrow.get("2020-07-01T00:00:00").datetime
     assert event.sell_to == arrow.get("2021-06-30T20:00:00").datetime
     assert event.sold_out is False
+    assert event.min_price == 15.0
+    assert event.max_price == 30.0
 
     assert zone.provider_id == test_provider.id
     assert zone.provider_event_id == event.id

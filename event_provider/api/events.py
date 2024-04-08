@@ -31,7 +31,9 @@ class EventResponse(BaseModel):
 
 
 @router.get("/search/", response_model=BaseObjectListResponse[EventResponse])
-async def events_list(starts_at: str | None = None, ends_at: str | None = None, session=Depends(get_api_db_session)):
+async def events_list(
+    starts_at: str | None = None, ends_at: str | None = None, offline: bool = False, session=Depends(get_api_db_session)
+):
     event_data_list = []
 
     try:
@@ -44,7 +46,7 @@ async def events_list(starts_at: str | None = None, ends_at: str | None = None, 
     except arrow.ParserError as _e:
         raise HTTPException(status_code=400, detail=f"Invalid _ends_at date format. date {ends_at}") from _e
 
-    events = await events_services.get_all_events(session, starts_at=_starts_at, ends_at=_ends_at)
+    events = await events_services.get_all_events(session, starts_at=_starts_at, ends_at=_ends_at, show_offline=offline)
     for event in events:
         event_data_list.append(
             EventResponse(

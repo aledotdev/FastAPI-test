@@ -19,7 +19,7 @@ def fixtute_test_settings():
 
 @pytest.fixture(name="db_engine")
 def fixture_db_engine(test_settings):
-    yield database.create_async_engine(test_settings.DB_URL)
+    yield database.create_async_engine(test_settings.TEST_DB_URL)
 
 
 @pytest_asyncio.fixture(name="async_session")

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ScalarResult, func, select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 
 from .. import models, schemas
 
@@ -102,15 +102,19 @@ async def get_all_events(
     db_session: "AsyncSession",
     starts_at: datetime | None = None,
     ends_at: datetime | None = None,
+    show_offline: bool | None = False,
     provider: models.Provider | None = None,
 ) -> ScalarResult[models.ProviderEvent]:
-    query = select(models.ProviderEvent).options(joinedload(models.ProviderEvent.provider_base_event))
+    query = select(models.ProviderEvent).join(models.ProviderEvent.provider_base_event)
     if provider:
         query = query.where(models.ProviderEvent.provider_id == provider.id)
     if starts_at:
         query = query.where(models.ProviderEvent.event_start_date >= starts_at)
     if ends_at:
         query = query.where(models.ProviderEvent.event_start_date <= ends_at)
+    if show_offline is False:
+        query = query.where(models.ProviderBaseEvent.sell_mode == "online")
+    query = query.options(contains_eager(models.ProviderEvent.provider_base_event))
     return await db_session.scalars(query)
 
 
@@ -189,7 +193,7 @@ async def update_event_max_min_prices(
 ):
     zone_query = (
         select(
-            models.ProviderEventZone,
+            models.ProviderEventZone.provider_event_id,
             func.min(models.ProviderEventZone.price),
             func.max(models.ProviderEventZone.price),
         )
@@ -200,6 +204,7 @@ async def update_event_max_min_prices(
     if prices := (await db_session.execute(zone_query)).first():
         provider_event.min_price = prices[1]
         provider_event.max_price = prices[2]
+        db_session.add(provider_event)
 
 
 async def get_provider_event_zone(

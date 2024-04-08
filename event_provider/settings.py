@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     ENV: str = "dev"
     LOG_LEVEL: str = "INFO"
 
-    DB_URL: str = "sqlite+aiosqlite://"  # SQLite in memory by default
+    DB_URL: str = "sqlite+aiosqlite:///./provider_events.sqlite"  # SQLite in memory by default
+    TEST_DB_URL: str = "sqlite+aiosqlite://"  # SQLite in memory by default
     DB_ENGINE: AsyncEngine | None = None
 
     EVENTS_SYNC_DELAY_SECONDS: int = 60
@@ -27,7 +28,7 @@ def get_settings(env: str | None = None, reload=False) -> Settings:
     if not CACHED_SETTINGS or reload:
         if env is None:
             env = os.getenv("PROVIDER_EVENTS_ENV", "dev")
-        env_files = ["settings/envs/.env-common"]
+        env_files = []
         if env != "dev" and os.path.exists(f"settings/envs/.env-{env}"):
             env_files.append(f"settings/envs/.env-{env}")
         if os.path.exists(".env-local"):
