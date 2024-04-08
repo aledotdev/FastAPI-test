@@ -54,6 +54,9 @@ class ProviderEvent(DBBase):
     sell_to = mapped_column(DateTime(timezone=True))
     sold_out: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    max_price: Mapped[float] = mapped_column(default=0)
+    min_price: Mapped[float] = mapped_column(default=0)
+
     provider: Mapped["Provider"] = relationship("Provider")
     provider_base_event: Mapped["ProviderBaseEvent"] = relationship(back_populates="events")
     zones: Mapped[list["ProviderEventZone"]] = relationship()

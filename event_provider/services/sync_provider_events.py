@@ -36,6 +36,7 @@ async def sync_provider_events(provider: models.Provider, session: "AsyncSession
                     except:  # pylint: disable=bare-except
                         msg = "Sync error for EventZone. Provider: %s Event: %s data: %s"
                         logger.exception(msg, provider.id, event.id, zone_data)
+                await events_services.update_event_max_min_prices(provider, event, session)
 
 
 async def _provider_base_event_create_or_update(

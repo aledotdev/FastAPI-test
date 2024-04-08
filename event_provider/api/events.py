@@ -54,8 +54,8 @@ async def events_list(starts_at: str | None = None, ends_at: str | None = None, 
                 start_time=_format_event_time(event.event_start_date),
                 end_date=_format_event_date(event.event_end_date),
                 end_time=_format_event_time(event.event_end_date),
-                min_price=0,
-                max_price=0,
+                min_price=event.min_price,
+                max_price=event.max_price,
             )
         )
 
