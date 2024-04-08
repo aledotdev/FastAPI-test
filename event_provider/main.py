@@ -1,13 +1,15 @@
 from fastapi import FastAPI
 
-from event_provider.database import create_async_engine, init_db
-from event_provider.settings import get_settigns
+from .api import events
+from .settings import get_settings
 
 
 def init_app():
-    settings = get_settigns()
+    settings = get_settings()
     new_app = FastAPI(title=settings.app_name, version=settings.app_version)
-    init_db(create_async_engine(settings))
+
+    new_app.include_router(events.router)
+
     return new_app
 
 

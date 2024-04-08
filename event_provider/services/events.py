@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import ScalarResult, select
@@ -99,8 +100,14 @@ async def get_provider_event(
 
 async def get_all_events(
     db_session: "AsyncSession",
+    starts_at: datetime | None = None,
+    ends_at: datetime | None = None,
 ) -> ScalarResult[models.ProviderEvent]:
     query = select(models.ProviderEvent).options(joinedload(models.ProviderEvent.provider_base_event))
+    if starts_at:
+        query = query.where(models.ProviderEvent.event_start_date >= starts_at)
+    if ends_at:
+        query = query.where(models.ProviderEvent.event_start_date <= ends_at)
     return await db_session.scalars(query)
 
 
