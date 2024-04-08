@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     ENV: str = "dev"
     LOG_LEVEL: str = "INFO"
 
-    DB_URL: str = "sqlite://"  # SQLite in memory by default
+    DB_URL: str = "sqlite+aiosqlite://"  # SQLite in memory by default
     DB_ENGINE: AsyncEngine | None = None
 
     EVENTS_SYNC_DELAY_SECONDS: int = 60

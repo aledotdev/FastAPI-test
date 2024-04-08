@@ -28,7 +28,7 @@ cmd: requirements_flag ## Run flask project in debug mode
 	python -m commands.$(args)
 
 test: requirements_flag ## Run tests
-	ENV=test python -m pytest tests/ $(args)
+	ENV=test python -m pytest tests/ -v $(args)
 
 hooks-check: ## Run all hooks against all files
 	@pre-commit run --all-files

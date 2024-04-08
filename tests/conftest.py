@@ -17,13 +17,15 @@ def fixtute_test_settings():
     yield get_settings(env="test")
 
 
+@pytest.fixture(name="db_engine")
+def fixture_db_engine(test_settings):
+    yield database.create_async_engine(test_settings.DB_URL)
+
+
 @pytest_asyncio.fixture(name="async_session")
-async def fixture_async_db(test_settings):
-    engine = database.create_async_engine(test_settings.DB_URL)
-
-    await database.init_db(engine, dropall=True)
-
-    async_session = async_sessionmaker(engine, expire_on_commit=False)
+async def fixture_async_db(db_engine):
+    await database.init_db(db_engine, dropall=True)
+    async_session = async_sessionmaker(db_engine, expire_on_commit=False)
     yield async_session
 
 
@@ -78,3 +80,9 @@ def provider_events_xml_example():
     with open("tests/utils/provider_events_example.xml", "rb") as fd:
         data = fd.read()
     return data
+
+
+@pytest.fixture(name="skip_if_sqlite")
+def fixture_skip_if_sqlite(db_engine):
+    if db_engine.driver in ["sqlite", "aiosqlite"]:
+        pytest.skip(reason="Test not compatible with SQLite")

@@ -10,7 +10,11 @@ from event_provider.services import sync_provider_events
 @pytest.mark.asyncio
 @mock.patch("event_provider.services.sync_provider_events.fetch_provider_event_data")
 async def test_provider_events_sync_fetch(
-    fetch_provider_event_data_mock, test_provider, provider_events_xml_example, async_session
+    fetch_provider_event_data_mock,
+    test_provider,
+    provider_events_xml_example,
+    async_session,
+    skip_if_sqlite,  # pylint: disable=unused-argument
 ):
     async with async_session() as session:
         fetch_provider_event_data_mock.return_value = provider_events_xml_example
